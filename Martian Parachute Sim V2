@@ -1,0 +1,79 @@
+GlowScript 3.0 VPython
+#This program simulates the landing of a parchute-payload system on Mars.
+#Assumptions: (1) model the system as a sphere; (2) use a single parachute
+################################################################################
+### Constants
+g_Mars = 3.7 # the acceleration due to gravity on Mars (in m/s^2)
+M_tot = 1035 # the total mass of the system (lander + rover) (in kg)
+rho = 0.01 # the density of the atmosphere on Mars (in kg/m^3)
+C_d = 0.5 # the drag coefficient of the system
+
+### Set Initial Conditions
+# Units are automatically converted: from miles to meters, from mph to m/s, and from deg to rad
+InitialHeight = 80*1609.34 # the height of the atmospheric entry
+InitialSpeed = 11000*0.44704 # the entry speed of the lander
+Angle = 80*pi/180 # the entry angle above vertical
+t = 0 #s
+deltaT = 0.01 #s
+
+
+###-----------------------Creating Objects-------------------------###
+#This section sets up the visual elements (the lander and the ground)#
+###----------------------------------------------------------------###
+scene=display(center=vec(0,InitialHeight/2,0))
+Ground = box(pos=vec(0,-10000,0), length=1000000, height=10000, width=500000, color=color.red)
+Lander = sphere(pos=vec(0,InitialHeight,0), radius=10000, color=color.blue, make_trail = True) # the image is not for scale!
+### Defining and initializing the momentum of the lander
+Lander.mom = M_tot*InitialSpeed*vec(sin(Angle),-cos(Angle),0)
+
+###-------------------------Creating Graphs---------------------------###
+#This section sets up the graphs which are plotted during the while loop#
+###-------------------------------------------------------------------###
+gd1=graph(xtitle='time (s)', ytitle='Height (m)') #create a graph for plotting the height vs time
+plt1=gcurve(color=color.cyan, label='Height') #create a curve to plot the height/time graph
+gd2=graph(xtitle='time (s)', ytitle='Speed (m/s)') #create a graph for plotting the speed vs time
+plt2=gcurve(color=color.red, label='Speed') #create a curve to plot the speed/time graph
+
+### Iterative Position Update
+# Initialize the time t:
+# Set the time step dt:
+# Define the force of gravity acting on the lander:
+# Define the drag force acting on the lander:
+# Define the net force acting on the lander:
+
+velocity = Lander.mom/M_tot
+Fdrag = (1/2) * C_d * pi * 2 * 2 * rho * InitialSpeed * 2 * velocity.hat
+ForceNet = vector(0,(-1*M_tot*g_Mars),0)+Fdrag
+
+Speed = InitialSpeed
+Height = InitialHeight
+while Speed > 200*0.44704:
+    ##The next four lines of code are called an "if-else" statement. 
+    ##The if-else operators allow the program to make decisions based on logical conditions.
+    ##If-else operators follow the same indentation rules as the while loops.
+    if Height < 10*1609.34 :
+        Area = pi*8*8 # the effective cross-sectional area with the parachute open
+    else :
+        Area = pi*2*2 # the cross-sectional area of the system
+    coeff = -(1/2)* C_d * Area * rho
+    velocity = Lander.mom / M_tot
+    Drag_F = coeff * Speed ** 2 * velocity.hat
+    # Update the net force acting on the lander:
+    NetForce = vector(0 , (-M_tot * g_Mars), 0) + Drag_F
+    # Code the momentum update:
+    Lander.mom = Lander.mom + (NetForce * deltaT)
+    # Code the position update:
+    Lander.pos = Lander.pos + (velocity * deltaT)
+    # Update the time:
+    t = t + deltaT
+    
+    #The rate(n) command tells the computer to halt computation for 1/n seconds before proceeding. 
+    #This allows us to slow down the visual refresh rate of the simulation so that we can actually perceive the motion.   
+    rate(10000)
+    
+    Speed = mag(Lander.mom)/M_tot
+    Height = Lander.pos.y
+    plt1.plot(t, Height)
+    plt2.plot(t, Speed)
+
+###---------------------This is the end of the program------------------------###
